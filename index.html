@@ -26,214 +26,18 @@
 #drive-list p{margin:.6rem 0 .15rem;font-size:.85rem}
 #drive-list button[aria-pressed=true]{font-weight:750;outline:2px solid currentColor}
 
-</style>
+#drive-panel{margin-block:0 1rem} #drive-preview{overflow-wrap:anywhere} #drive-detail{scroll-margin:1.5rem} [hidden]{display:none!important} .workspace-body section{margin-block:1rem} .workspace-body h3{margin:.3rem 0 .6rem}</style>
 </head>
 <body>
 <main>
-<header class="topbar"><a href="#/current" class="brand" aria-label="Картотека, главная">Картотека</a><div class="tools"><a id="digest" class="tool digest" hidden>Дайджест</a><details class="theme-menu"><summary class="tool">Тема <span aria-hidden="true">⌄</span></summary><div class="theme-pick" aria-label="Выбор темы"><button type="button" data-theme="a" aria-pressed="false"><i></i>Два поля</button><button type="button" data-theme="b" aria-pressed="true"><i></i>Карманные папки</button><button type="button" data-theme="c" aria-pressed="false"><i></i>Рабочий круг</button></div></details></div></header>
+<header class="topbar"><a href="#/current" class="brand" aria-label="Картотека, главная">Картотека</a><div class="tools"><details class="theme-menu"><summary class="tool">Тема <span aria-hidden="true">⌄</span></summary><div class="theme-pick" aria-label="Выбор темы"><button type="button" data-theme="a" aria-pressed="false"><i></i>Два поля</button><button type="button" data-theme="b" aria-pressed="true"><i></i>Карманные папки</button><button type="button" data-theme="c" aria-pressed="false"><i></i>Рабочий круг</button></div></details></div></header>
 <div class="lead" id="lead"><i class="orbit" aria-hidden="true"></i><span class="kicker" id="theme-kicker">КАРТОТЕКА / Б</span><h1 id="theme-title">Карманные папки</h1></div>
+<div id="drive-panel" class="drive-panel"><div class="bar"><button id="drive-connect" type="button">Подключить Google Диск</button><button id="drive-pick" type="button" disabled>Выбрать рабочую папку</button><button id="drive-refresh" type="button" hidden>Обновить</button><button id="drive-forget" type="button" hidden>Сменить папку</button></div><p id="drive-status" role="status">Подключите Google Диск, чтобы увидеть заметки.</p></div>
 <label class="search" for="search"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input id="search" type="search" placeholder="Найти заметку или задачу" aria-label="Поиск"></label>
 <div id="content" aria-live="polite"></div>
-<div class="add-wrap" id="add-wrap"><button id="add-task" type="button" class="add">Добавить дело <span aria-hidden="true">＋</span></button></div>
-<details id="drive-panel" class="drive-panel"><summary>Google Диск</summary>
-<p class="muted">Сначала выберите рабочую папку, затем заметку. Папка запоминается только до перезагрузки вкладки. Сохраните черновики перед перезагрузкой.</p>
-<div class="bar"><button id="drive-connect" type="button">Подключить Google Диск</button><button id="drive-pick" type="button" disabled>Выбрать на Диске</button></div>
-<p id="drive-status" role="status">Содержимое Диска не загружается без вашего выбора.</p>
-<div id="drive-list" aria-label="Открытые заметки с Google Диска"></div>
-<article id="drive-detail" hidden><h2 id="drive-title"></h2><label for="drive-editor">Markdown</label><textarea id="drive-editor" rows="9" spellcheck="false"></textarea>
-<div class="bar"><button id="drive-save" type="button" disabled>Записать на Диск</button><button id="drive-reload" type="button" disabled>Обновить с Диска</button><button id="drive-export" type="button">Скачать .md</button></div></article>
-<details><summary>Новая заметка на Диске</summary><p class="muted">Сначала выберите саму рабочую папку в Google Picker.</p>
-<form id="drive-create"><label>Название <input name="title" required maxlength="100"></label><label>Раздел <select name="group"><option value="personal">Личное</option><option value="work">Петроработа</option></select></label><label>Горизонт <select name="lane"><option value="current">Текущие</option><option value="later">Долгосрочные</option></select></label><button id="drive-new" type="submit" disabled>Создать .md</button></form></details></details>
-<footer><details><summary>Файлы Markdown</summary><p>Локальные правки сохраняются только в этом браузере. Для заметок на Диске есть отдельный раздел Google Диск. Скачанные .md можно открыть в Obsidian.</p><label>Импортировать копии .md <input id="import" type="file" accept=".md,text/markdown" multiple></label></details><p id="status" role="status"></p></footer>
-</main>
-<dialog id="new-task"><form id="task-form"><div class="form-head"><h2>Новое дело</h2><button id="close-task" type="button" aria-label="Закрыть">×</button></div><label>Название<input name="title" maxlength="100" required></label><label>Раздел<select name="group"><option value="personal">Личное</option><option value="work">Петроработа</option></select></label><label>Горизонт<select name="lane"><option value="current">Текущие</option><option value="later">Долгосрочные</option></select></label><p class="form-error" id="form-error" role="alert"></p><button class="add" type="submit">Добавить</button></form></dialog>
-<script>const embeddedNotes={"Подготовить встречу":"---\ntitle: Подготовить встречу\nlane: current\nkind: task\ngroup: work\nstatus: open\n---\n## Следующий шаг\nСобрать три пункта для обсуждения. Контекст: [[План проекта|план и решения]].\n\n- [ ] Собрать вопросы\n- [x] Определить цель\n","Разобрать материалы":"---\ntitle: Разобрать материалы\nlane: current\nkind: task\ngroup: work\nstatus: open\n---\nОткрыть [[Справочные материалы#Источники|список источников]].\n","Сверить документы":"---\ntitle: Сверить документы\nlane: current\nkind: task\ngroup: personal\nstatus: open\n---\nСверить даты и сохранить итог проверки. Это демонстрационная задача.\n","План проекта":"---\ntitle: План проекта\nlane: later\nkind: project\ngroup: work\naliases:\n  - План\n---\n## Следующий шаг\nСогласовать критерии и вернуться к [[Подготовить встречу|подготовке встречи]].\n\n## Решения\nЧерновые материалы лежат в [[Справочные материалы]].\n","Справочные материалы":"---\ntitle: Справочные материалы\nlane: later\nkind: project\ngroup: personal\n---\n## Источники\nТестовая заметка: сюда можно добавить файлы и ссылки.\n\nСледом: [[План|вернуться к плану]].\n"};
-const $=s=>document.querySelector(s), el=(t,x)=>{const e=document.createElement(t);if(x!==undefined)e.textContent=x;return e};
-const paths=["Подготовить встречу","Разобрать материалы","Сверить документы","План проекта","Справочные материалы"];
-const key="kartoteka-demo:1";
-const notes=new Map();
-const strip=s=>s.replace(/\.md$/i,"");
-const normalize=s=>s.normalize("NFC").trim().toLocaleLowerCase("ru");
-const yamlText=s=>{
- const t=s.trim();
- if(t.startsWith('"')&&t.endsWith('"')){try{const x=JSON.parse(t);if(typeof x==="string")return x}catch{}}
- return t.replace(/^(['"])(.*)\1$/,"$2");
-};
-const parse=raw=>{
- const match=raw.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
- const p={};let last="";
- for(const line of (match?.[1]||"").split(/\r?\n/)){
-  const scalar=line.match(/^([A-Za-z_]+):(?:\s+(.*))?$/);
-  if(scalar){last=scalar[1];p[last]=yamlText(scalar[2]||"");continue}
-  const item=line.match(/^\s+-\s+(.+)$/);
-  if(item&&last){if(!Array.isArray(p[last]))p[last]=[];p[last].push(item[1].replace(/^(['"])(.*)\1$/,"$2"))}
- }
- return {p,body:raw.slice(match?.[0].length||0)};
-};
-const get=n=>parse(notes.get(n));
-const route=n=>n?"#/note/"+encodeURIComponent(n):"#/current";
-let query="";
-let edit=null;
-function save(n,raw){notes.set(n,raw);try{localStorage.setItem(key,JSON.stringify([...notes]))}catch{$("#status").textContent="Не удалось сохранить правки между запусками."}}
-function resolve(name,current){
- const n=normalize(strip(name)), base=current?.includes("/")?current.slice(0,current.lastIndexOf("/")+1):"";
- for(const wanted of [normalize(base+strip(name)),n]){
-  const exact=[...notes.keys()].filter(k=>normalize(k)===wanted);if(exact.length===1)return exact[0];
- }
- const found=[...notes.keys()].filter(k=>normalize(k.split("/").at(-1))===n||[get(k).p.aliases].flat().some(v=>v&&normalize(v)===n));return found.length===1?found[0]:null;
-}
-function safeUrl(url){try{const u=new URL(url);return ["http:","https:","mailto:"].includes(u.protocol)?u.href:null}catch{return null}}
-function inline(parent,line,current){
- const pattern=/!?\[\[([^\]\n]+)\]\]|\[([^\]\n]+)\]\(([^)\s]+)\)|\*\*([^*\n]+)\*\*|`([^`\n]+)`/g;
- let i=0;
- for(const m of line.matchAll(pattern)){
-  parent.append(document.createTextNode(line.slice(i,m.index)));i=m.index+m[0].length;
-  if(m[1]){const [target,label]=m[1].split("|"),[name,heading]=target.split("#"),n=name?resolve(name,current):current;if(n){const a=el("a",label||heading||name);a.href=route(n)+(heading?"/"+encodeURIComponent(heading):"");parent.append(a)}else{const e=el("span",label||target);e.className="muted";e.title="Связанная заметка не найдена или имя неоднозначно";parent.append(e)}}
-  else if(m[2]){const href=safeUrl(m[3]);let n=null;if(!href){try{n=resolve(decodeURIComponent(m[3]),current)}catch{}}const a=el(href||n?"a":"span",m[2]);if(href){a.href=href;a.target="_blank";a.rel="noopener noreferrer"}else if(n)a.href=route(n);parent.append(a)}
-  else parent.append(el(m[4]?"strong":"code",m[4]||m[5]));
- }
- parent.append(document.createTextNode(line.slice(i)));
-}
-function link(n){const a=el("a",get(n).p.title||n.split("/").at(-1));a.href=route(n);return a}
-function card(n){const {p}=get(n),d=el("div");d.className="card";if(p.kind==="task"){const c=el("input");c.type="checkbox";c.checked=p.status==="done";c.setAttribute("aria-label","Выполнено: "+(p.title||n));c.onchange=()=>{const raw=notes.get(n);const f=raw.match(/^---\r?\n[\s\S]*?\r?\n---(?=\r?\n|$)/);if(!f)return;const status="status: "+(c.checked?"done":"open");const header=/^status:.*$/m.test(f[0])?f[0].replace(/^status:[^\r\n]*/m,status):f[0].replace(/\r?\n---$/,x=>x.slice(0,-3)+status+(x.startsWith("\r")?"\r\n":"\n")+"---");save(n,header+raw.slice(f[0].length))};d.append(c)}d.append(link(n));if(p.due){const span=el("span",p.due);span.className="muted";d.append(span)}return d}
-const uiKey="kartoteka-demo:ui:1";
-const looks={a:["КАРТОТЕКА / А","Два поля"],b:["КАРТОТЕКА / Б","Карманные папки"],c:["КАРТОТЕКА / В","Рабочий круг"]};
-const groups=[["personal","Личное"],["work","Петроработа"]];
-const lanes=[["current","Текущие"],["later","Долгосрочные"]];
-const ui={theme:"b",open:{personal:true,work:true},lane:{personal:"current",work:"current"}};
-let uiRestored=false;
-try{
- const remembered=JSON.parse(localStorage.getItem(uiKey)||"null");
- if(remembered&&typeof remembered==="object"){
-  if(Object.hasOwn(looks,remembered.theme))ui.theme=remembered.theme;
-  for(const [g] of groups){
-   if(typeof remembered.open?.[g]==="boolean")ui.open[g]=remembered.open[g];
-   if(lanes.some(([l])=>l===remembered.lane?.[g]))ui.lane[g]=remembered.lane[g];
-  }
-  uiRestored=true;
- }
-}catch{}
-if(!uiRestored&&location.hash==="#/later"){ui.lane.personal="later";ui.lane.work="later"}
-function saveUI(){try{localStorage.setItem(uiKey,JSON.stringify(ui))}catch{}}
-function setTheme(theme,remember=false){
- if(!Object.hasOwn(looks,theme))return;
- ui.theme=theme;document.documentElement.dataset.theme=theme;
- $("#theme-kicker").textContent=looks[theme][0];$("#theme-title").textContent=looks[theme][1];
- for(const b of document.querySelectorAll("[data-theme] button[data-theme]"))b.setAttribute("aria-pressed",String(b.dataset.theme===theme));
- if(remember)saveUI();
-}
-document.querySelector(".theme-pick").addEventListener("click",e=>{
- const b=e.target.closest("button[data-theme]");if(!b)return;
- setTheme(b.dataset.theme,true);
- const menu=$(".theme-menu");menu.open=false;menu.querySelector("summary").focus();
-});
-document.addEventListener("click",e=>{const menu=$(".theme-menu");if(menu.open&&!menu.contains(e.target))menu.open=false});
-document.addEventListener("keydown",e=>{const menu=$(".theme-menu");if(e.key==="Escape"&&menu.open){menu.open=false;menu.querySelector("summary").focus()}});
-setTheme(ui.theme);
-function workspace(g,title){
- const s=el("details");s.className="workspace";s.dataset.group=g;s.open=ui.open[g];
- const head=el("summary");head.className="workspace-head";
- const label=el("span",title);label.className="workspace-title";
- const symbol=el("span");symbol.className="workspace-symbol";symbol.setAttribute("aria-hidden","true");
- head.append(label,symbol);s.append(head);
- s.ontoggle=()=>{if(ui.open[g]!==s.open){ui.open[g]=s.open;saveUI()}};
- const inner=el("div");inner.className="workspace-body";
- const nav=el("div");nav.className="lane-nav";nav.setAttribute("role","group");nav.setAttribute("aria-label",title+": горизонт");
- const list=el("div");list.className="workspace-list";
- for(const [l,caption] of lanes){
-  const button=el("button",caption);button.type="button";button.dataset.lane=l;
-  button.setAttribute("aria-pressed",String(ui.lane[g]===l));
-  button.onclick=()=>{
-   ui.lane[g]=l;saveUI();populate();
-   for(const other of nav.children)other.setAttribute("aria-pressed",String(other===button));
-  };
-  nav.append(button);
- }
- function populate(){
-  list.replaceChildren();let index=0;
-  for(const n of notes.keys()){
-   const {p}=get(n);
-   if(p.lane!==ui.lane[g]||p.group!==g||!["task","project"].includes(p.kind))continue;
-   const row=card(n);row.dataset.index=String(++index).padStart(2,"0");list.append(row)
-  }
-  if(!list.children.length){const empty=el("p","Пока ничего нет.");empty.className="muted empty";list.append(empty)}
- }
- populate();inner.append(nav,list);s.append(inner);return s;
-}
-function render(){
- const parts=location.hash.split("/");const page=parts[1]||"current";let n,anchor;try{n=decodeURIComponent(parts[2]||"");anchor=decodeURIComponent(parts[3]||"")}catch{}
- const area=$("#content");area.replaceChildren();
- const isNote=page==="note"&&notes.has(n);
- $("#lead").hidden=isNote;$("#add-wrap").hidden=isNote||Boolean(query);
- const digest=[...notes.keys()].filter(k=>get(k).p.kind==="digest"&&get(k).p.lane==="current").sort((a,b)=>String(get(b).p.date||"").localeCompare(String(get(a).p.date||"")))[0];
- $("#digest").hidden=!digest;if(digest)$("#digest").href=route(digest);
-
- if(page==="note"&&notes.has(n)){
-  const a=el("article"),{body,p}=get(n);
-  const back=el("a","‹ К разделам");back.href="#/current";back.className="back";a.append(back,el("h2",p.title||n.split("/").at(-1)));
-  const toolbar=el("div");toolbar.className="bar";
-  const action=(label,run)=>{const b=el("button",label);b.onclick=run;toolbar.append(b)};
-  if(edit?.n===n){
-   const t=el("textarea");t.value=edit.value;t.setAttribute("aria-label","Текст Markdown");t.oninput=()=>{edit.value=t.value};
-   action("Сохранить",()=>{save(n,t.value);edit=null;render()});action("Отмена",()=>{edit=null;render()});a.append(toolbar,t);
-  }else{
-   action("Редактировать Markdown",()=>{edit={n,value:notes.get(n)};render()});
-   action("Скачать .md",()=>download(n));a.append(toolbar);
-   let code=null, li=null;
-   for(const line of body.split(/\r?\n/)){
-    if(line.startsWith("\`\`\`")){if(!code){code=el("pre","");a.append(code)}else code=null;li=null;continue}
-    if(code){code.textContent+=line+"\n";continue}
-    if(!line.trim()){li=null;continue}
-    const h=line.match(/^(#{1,6})\s+(.+)$/), b=line.match(/^\s*[-*]\s+(?:\[([ xX])\]\s+)?(.+)$/);
-    if(b){if(!li){li=el("ul");a.append(li)}const item=el("li");if(b[1]!==undefined)item.append(el("span",b[1]===" "?"☐ ":"☑ "));inline(item,b[2],n);li.append(item)}
-    else{li=null;const node=el(h?"h"+Math.min(h[1].length+2,6):"p");if(h)node.dataset.heading=h[2];inline(node,h?h[2]:line,n);a.append(node)}
-   }
-   const linked=[...notes.keys()].filter(k=>k!==n&&[...get(k).body.matchAll(/\[\[([^\]#|]+)/g)].some(m=>resolve(m[1],k)===n));
-   if(linked.length){a.append(el("h3","Сюда ссылаются"));const ul=el("ul");for(const k of linked){const li=el("li");li.append(link(k));ul.append(li)}a.append(ul)}
-  }
-  area.append(a);if(anchor)Array.from(a.querySelectorAll("[data-heading]")).find(e=>normalize(e.dataset.heading)===normalize(anchor))?.scrollIntoView();return;
- }
- if(query){
-  const s=el("section");s.append(el("h2","Результаты поиска"));const found=[...notes.keys()].filter(k=>normalize(k+"\n"+notes.get(k)).includes(normalize(query)));for(const k of found)s.append(card(k));if(!found.length)s.append(el("p","Ничего не найдено."));area.append(s);return;
- }
- for(const [g,title] of groups)area.append(workspace(g,title));
-}
-function download(n){const a=el("a");const url=URL.createObjectURL(new Blob([notes.get(n)],{type:"text/markdown;charset=UTF-8"}));a.href=url;a.download=n.split("/").at(-1)+".md";a.click();setTimeout(()=>URL.revokeObjectURL(url),500)}
-const dialog=$("#new-task"),form=$("#task-form");
-$("#add-task").onclick=()=>{form.reset();$("#form-error").textContent="";const group=groups.find(([g])=>ui.open[g])?.[0]||"personal";form.elements.group.value=group;form.elements.lane.value=ui.lane[group];dialog.showModal()};
-$("#close-task").onclick=()=>dialog.close();
-form.elements.group.onchange=()=>{form.elements.lane.value=ui.lane[form.elements.group.value]};
-form.onsubmit=e=>{
- e.preventDefault();const title=form.elements.title.value.trim(), group=form.elements.group.value,lane=form.elements.lane.value;
- if(!title||/[\\/\[\]#|]/.test(title)){$("#form-error").textContent="Укажи название без /, \\, [, ], # и |.";return}
- if([...notes.keys()].some(n=>normalize(n)===normalize(title))){$("#form-error").textContent="Дело или заметка с таким названием уже есть.";return}
- if(!groups.some(([g])=>g===group)||!lanes.some(([l])=>l===lane))return;
- save(title,`---\ntitle: ${JSON.stringify(title)}\nkind: task\ngroup: ${group}\nlane: ${lane}\nstatus: open\n---\n\n`);
- ui.open[group]=true;ui.lane[group]=lane;saveUI();dialog.close();render();
-};
-$(".brand").onclick=()=>{
- const s=$("#search");s.value="";query="";edit=null;
- if(location.hash==="#/current")render();
-};
-window.addEventListener("hashchange",()=>{edit=null;render()});
-$("#search").oninput=e=>{query=e.target.value.trim();edit=null;if(location.hash.startsWith("#/note/"))location.hash="#/current";else render()};
-$("#import").onchange=async e=>{
- let ok=0,skip=0;
- for(const file of e.target.files){
-  const n=strip(file.name);if(!/\.md$/i.test(file.name)||file.size>2e6){skip++;continue}
-  if(notes.has(n)){skip++;continue}
-  save(n,await file.text());ok++;
- }
- e.target.value="";$("#status").textContent="Импортировано: "+ok+(skip?". Пропущено: "+skip+" (совпадение имени, формат или размер).":".");render();
-};
-async function init(){
- for(const path of paths){
-  notes.set(path,embeddedNotes[path]);
- }
- try{const cached=JSON.parse(localStorage.getItem(key)||"[]");for(const [n,raw] of cached)if(typeof n==="string"&&typeof raw==="string")notes.set(n,raw)}catch{}
- render();
-}
-init().catch(()=>{$("#status").textContent="Не удалось загрузить тестовые заметки. Попробуй обновить страницу."});</script><script type="module">const noteBundle=(()=>{
+<article id="drive-detail" hidden><a href="#/current">К списку</a><h2 id="drive-title"></h2><div id="drive-preview"></div><textarea id="drive-editor" aria-label="Редактор Markdown" rows="12" spellcheck="false" hidden></textarea><div class="bar"><button id="drive-edit" type="button">Редактировать Markdown</button><button id="drive-save" type="button" hidden>Сохранить на Диске</button><button id="drive-cancel" type="button" hidden>Отмена</button></div></article><details id="create-panel" class="drive-panel"><summary>Создать заметку</summary><form id="drive-create"><label>Название <input name="title" required maxlength="100"></label><label>Раздел <select name="group"><option value="personal">Личное</option><option value="work">Петроработа</option></select></label><label>Горизонт <select name="lane"><option value="current">Текущие</option><option value="later">Долгосрочные</option></select></label><button id="drive-new" type="submit" disabled>Создать .md</button></form></details></main>
+<script type="module">const config={"origin":"https://chjknmmbvc.github.io","clientId":"286716680294-b8ugo4j3rlp5p4odqbmm4qc2olu61c5h.apps.googleusercontent.com","appId":"286716680294","pickerKey":"AIzaSyCw5cAmOINPPvmpxpNcCqVu00Eg5mLaL48"};
+const noteBundle=(()=>{
 // Single-file pilot core. Site access and Google authorization are separate.
 const api = "https://www.googleapis.com/drive/v3/files/";
 const upload = "https://www.googleapis.com/upload/drive/v3/files/";
@@ -253,7 +57,7 @@ function createDrivePilot({fileId, folderId, getToken, request = fetch}) {
     return r;
   }
   function check(m) {
-    if (m.id !== fileId || m.trashed || !m.name?.endsWith(".md") ||
+    if (m.id !== fileId || m.trashed || !/\.md$/i.test(m.name||"") ||
         !["text/markdown","text/plain","application/octet-stream"].includes(m.mimeType) ||
         !Array.isArray(m.parents) || !m.parents.includes(folderId) || !/^\d+$/.test(m.version)) {
       throw new Error("Drive file does not match the pilot");
@@ -351,140 +155,236 @@ function driveFolder({folderId,getToken,request=fetch}){
   if(snapshot.markdown!==markdown)throw new Error("Новая заметка уже изменилась. Откройте её из Google Диска.");
   return {id:result.id,snapshot};
  }
- return {verifyFolder,select,file,create};
+
+ async function listNotes(){
+  const allowed=new Set(["text/markdown","text/plain","application/octet-stream"]), rows=new Map(), seen=new Set();
+  let cursor="", partial=false, pages=0;
+  for(;;){
+   if(++pages>20){partial=true;break}
+   const q=new URLSearchParams({q:"'"+folderId+"' in parents and trashed = false",spaces:"drive",pageSize:"100",fields:"nextPageToken,incompleteSearch,files(id,name,mimeType,parents,trashed,capabilities(canEdit))"});
+   if(cursor)q.set("pageToken",cursor);
+   const page=await call(drive+"?"+q.toString());
+   partial ||= page.incompleteSearch===true;
+   for(const f of page.files||[]){
+    if(/^[A-Za-z0-9_-]{8,150}$/.test(f?.id||"") && f.trashed===false && typeof f.name==="string" && /\.md$/i.test(f.name) && allowed.has(f.mimeType) && f.parents?.includes(folderId))rows.set(f.id,f);
+   }
+   cursor=page.nextPageToken||"";
+   if(!cursor)break;
+   if(seen.has(cursor)){partial=true;break}
+   seen.add(cursor);
+  }
+  return {rows:[...rows.values()],partial};
+ }
+
+ return {verifyFolder,listNotes,select,file,create};
 }
 
 
 return {driveFolder,scope};})();
-const el=(tag,text)=>Object.assign(document.createElement(tag), text===undefined?{}:{textContent:text});
-const $=id=>document.getElementById(id);
-const data=new Map();
-let config, api, folderId, token, expires=0, active, ready=false, canCreate=false, busy=false, pickerOpen=false;
-const connected=()=>!!token&&Date.now()<expires;
-const notify=t=>{$("drive-status").textContent=t};
-const sdk=src=>new Promise((ok,no)=>{
- const s=el("script");s.src=src;s.onload=ok;s.onerror=()=>no(new Error("Не загрузился Google Picker."));document.head.append(s);
-});
-const laneTitle=(raw)=>{
- const fm=raw.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1]||"";
- const group=fm.match(/^group:[ \t]*(personal|work)[ \t]*$/m)?.[1];
- const lane=fm.match(/^lane:[ \t]*(current|later)[ \t]*$/m)?.[1];
- return group&&lane?(group==="personal"?"Личное":"Петроработа")+" / "+(lane==="current"?"Текущие":"Долгосрочные"):"Заметки без раздела";
-};
-const refreshButtons=()=>{
- $("drive-connect").disabled=busy||pickerOpen||ready;
- $("drive-pick").disabled=busy||pickerOpen||!ready;
- $("drive-new").disabled=busy||!canCreate||!connected();
- $("drive-editor").disabled=busy;
- const current=data.get(active);
- $("drive-reload").disabled=busy||!connected()||!current;
- $("drive-save").disabled=busy||!connected()||!current||current.draft===current.snapshot.markdown;
-};
-async function run(fn){
- if(busy)return;
- busy=true;refreshButtons();
- try{await fn()}catch(e){notify(e.message||"Не удалось обратиться к Google Диску.")}
- finally{busy=false;refreshButtons()}
-}
-function draw(){
- const list=$("drive-list"), sections=new Map();
- list.replaceChildren();
- for(const [id,rec] of data){
-  const lane=laneTitle(rec.snapshot.markdown);
-  if(!sections.has(lane)){const group=el("section");group.append(el("p",lane));list.append(group);sections.set(lane,group)}
-  const b=el("button",rec.snapshot.name.replace(/\.md$/i,""));b.type="button";b.className="drive-card";
-  b.setAttribute("aria-pressed",String(id===active));b.onclick=()=>{if(!busy){active=id;draw()}};
-  sections.get(lane).append(b);
- }
- $("drive-detail").hidden=!data.has(active);
- if(data.has(active)){
-  const {draft,snapshot}=data.get(active);$("drive-title").textContent=snapshot.name;
-  $("drive-editor").value=draft;
- }
- refreshButtons();
-}
-$("drive-connect").onclick=()=>run(async()=>{
- config={"origin":"https://chjknmmbvc.github.io","clientId":"286716680294-b8ugo4j3rlp5p4odqbmm4qc2olu61c5h.apps.googleusercontent.com","appId":"286716680294","pickerKey":"AIzaSyCw5cAmOINPPvmpxpNcCqVu00Eg5mLaL48"};
- if(config.origin!==location.origin||!config.clientId||!config.pickerKey||!/^\d+$/.test(config.appId))throw new Error("Неверная настройка Google Диска.");
- const timeout = new Promise((_,reject)=>setTimeout(()=>reject(new Error("Google Picker не ответил. Попробуйте обновить страницу.")),12000));
- await Promise.race([Promise.all([sdk("https://accounts.google.com/gsi/client"),sdk("https://apis.google.com/js/api.js")]),timeout]);
- await new Promise((ok,no)=>gapi.load("picker",{callback:ok,onerror:no,ontimeout:no,timeout:10000}));
- ready=true;
- $("drive-pick").textContent="Выбрать рабочую папку";
- notify("Выберите рабочую папку на Google Диске. Она используется только в этой вкладке.");
-});
-function donePicking(){pickerOpen=false;refreshButtons()}
-$("drive-pick").onclick=()=>{
- if(!ready||pickerOpen)return;
- pickerOpen=true;refreshButtons();
- const show=r=>{
-  try{
-   if(!r.access_token||!google.accounts.oauth2.hasGrantedAllScopes(r,scope))throw new Error("Google не выдал разрешение.");
-   token=r.access_token;expires=Date.now()+Math.max(0,Number(r.expires_in)-20)*1000;
-   const view=api
-    ? new google.picker.DocsView(google.picker.ViewId.DOCS).setIncludeFolders(false).setSelectFolderEnabled(false).setParent(folderId)
-    : new google.picker.DocsView(google.picker.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true);
-   new google.picker.PickerBuilder().addView(view).setAppId(config.appId).setDeveloperKey(config.pickerKey)
-    .setOrigin(location.origin).setOAuthToken(token).setCallback(event=>{
-     if(event.action===google.picker.Action.CANCEL){donePicking();return}
-     if(event.action!==google.picker.Action.PICKED)return;
-     donePicking();
-     run(async()=>{
-      const id=event.docs?.[0]?.id;
-      if(!api){
- const candidate=driveFolder({folderId:id,getToken:()=>connected()?token:null});
- const chosen=await candidate.verifyFolder();
- folderId=id;api=candidate;canCreate=chosen.capabilities?.canAddChildren===true;
- $("drive-pick").textContent="Выбрать заметку на Диске";
- notify(canCreate?"Рабочая папка выбрана. Теперь можно открыть или создать заметку.":"Рабочая папка выбрана. Можно открыть заметку; создавать файлы в этой папке нельзя.");
- return;
-}
-      const snapshot=await api.select(id);
-      const old=data.get(id);const dirty=!!old&&old.draft!==old.snapshot.markdown;
-      if(!dirty)data.set(id,{snapshot,draft:snapshot.markdown});
-      active=id;draw();
-      notify(dirty?"Доступ восстановлен. Черновик оставлен; версия проверится перед записью.":"Заметка открыта с Google Диска.");
-     })
-    }).build().setVisible(true);
-  }catch(e){donePicking();notify(e.message||"Не удалось открыть Google Picker.")}
- };
- try{
-  const client=google.accounts.oauth2.initTokenClient({client_id:config.clientId,scope,include_granted_scopes:false,
-   callback:show,error_callback:()=>{donePicking();notify("Окно Google не открылось или было закрыто.")}});
-  client.requestAccessToken();
- }catch{donePicking();notify("Не открылась авторизация Google.");}
-};
-$("drive-create").onsubmit=e=>{
- e.preventDefault();
- run(async()=>{
-  if(!canCreate||!connected())throw new Error("Выберите рабочую папку с правом создания файлов.");
-  const values=new FormData(e.currentTarget);
-  const result=await api.create(values.get("title"),values.get("group"),values.get("lane"));
-  data.set(result.id,{snapshot:result.snapshot,draft:result.snapshot.markdown});
-  active=result.id;$("drive-create").reset();draw();notify("Создан обычный Markdown-файл в рабочей папке.");
- });
-};
-$("drive-editor").oninput=e=>{data.get(active).draft=e.target.value;refreshButtons()};
-$("drive-reload").onclick=()=>run(async()=>{
- const rec=data.get(active);
- if(rec.draft!==rec.snapshot.markdown&&!confirm("Заменить черновик копией с Диска? Чтобы сохранить черновик, сначала скачайте его."))return;
- const snapshot=await api.file(active).read();data.set(active,{snapshot,draft:snapshot.markdown});
- draw();notify("Загружена последняя версия с Google Диска.");
-});
-$("drive-save").onclick=()=>run(async()=>{
- const rec=data.get(active),file=api.file(active),draft=rec.draft;
- const updated=await file.save({version:rec.snapshot.version,markdown:draft});
- const snapshot=await file.read();
- if(snapshot.version!==updated.version||snapshot.markdown!==draft)throw new Error("Запись не подтверждена или файл уже изменился. Черновик сохранён на экране; проверьте Диск.");
- data.set(active,{snapshot,draft});draw();notify("Подтверждено: записано в тот же .md на Google Диске.");
-});
-$("drive-export").onclick=()=>{
- const rec=data.get(active);if(!rec)return;
- const url=URL.createObjectURL(new Blob([rec.draft],{type:"text/markdown;charset=utf-8"}));
- const a=el("a");a.href=url;a.download=rec.snapshot.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-};
-refreshButtons();
 
+const $=s=>document.querySelector(s), by=id=>document.getElementById(id);
+const el=(t,x)=>{const e=document.createElement(t);if(x!==undefined)e.textContent=x;return e};
+const rows=new Map(), drafts=new Map(), folderKey="planx:drive:folder:v2";
+const validId=s=>typeof s==="string"&&/^[A-Za-z0-9_-]{8,150}$/.test(s);
+const noteName=s=>s.replace(/\.md$/i,"");
+let token="",expires=0,expiryTimer=0,scopeFolder="",adapter=null,epoch=0,active="",editing=false,busy=false,ready=false,picker=false,canCreate=false,sdkTask=null;
+try{let f=localStorage.getItem(folderKey);if(validId(f))scopeFolder=f}catch{}
+function keepFolder(s){try{if(s)localStorage.setItem(folderKey,s);else localStorage.removeItem(folderKey)}catch{}}
+const connected=()=>!!token&&Date.now()<expires;
+const message=s=>{by("drive-status").textContent=s};
+function state(){
+ for(const [id,on] of [["drive-connect",busy||picker||connected()],["drive-pick",busy||picker||!connected()],["drive-refresh",busy||picker||!connected()||!adapter],["drive-new",busy||picker||!adapter||!canCreate||!connected()],["drive-save",busy||!editing||!connected()]])by(id).disabled=on;
+ by("drive-pick").textContent=adapter?"Добавить заметки":"Выбрать рабочую папку";
+ by("drive-connect").textContent=scopeFolder?"Подключить рабочую папку":"Подключить Google Диск";
+ by("drive-forget").hidden=!scopeFolder;
+ by("drive-refresh").hidden=!adapter;
+}
+function cacheDraft(){if(editing&&active){const r=rows.get(active),draft=by("drive-editor").value;if(r&&draft!==r.snapshot.markdown)drafts.set(active,{markdown:draft,version:drafts.get(active)?.version??r.snapshot.version});}}
+function clearDetails(){cacheDraft();active="";editing=false;by("drive-editor").value="";by("drive-title").textContent="";by("drive-preview").replaceChildren();by("drive-detail").hidden=true;}
+function expire(){if(!connected()){token="";expires=0;adapter=null;canCreate=false;epoch++;clearDetails();rows.clear();draw();message(scopeFolder?"Сеанс Google завершён. Подключите рабочую папку снова.":"Подключите Google Диск, чтобы увидеть заметки.");state()}}
+const display=r=>typeof r.p.title==="string"&&r.p.title.trim()?r.p.title:noteName(r.meta.name);
+function resolve(name){
+ const q=normalize(noteName(name));const matches=[...rows.values()].filter(r=>[r.meta.name,display(r),...(Array.isArray(r.p.aliases)?r.p.aliases:[r.p.aliases])].some(v=>typeof v==="string"&&normalize(noteName(v))===q));
+ return matches.length===1?matches[0].meta.id:null;
+}
+function route(id){return "#note/"+encodeURIComponent(id)}
+function panel(parent,title,items){let s=el("section");s.append(el("h3",title));for(let r of items){let d=el("div");d.className="card";let a=el("a",display(r));a.href=route(r.meta.id);d.append(a);s.append(d)}if(!items.length){let p=el("p",adapter?"Нет подключённых заметок":"Пока не подключено");p.className="muted empty";s.append(p)}parent.append(s)}
+function draw(){
+ const content=by("content"), q=normalize(by("search").value), entries=[...rows.values()].sort((a,b)=>display(a).localeCompare(display(b),"ru"));content.replaceChildren();
+ if(q){panel(content,"Результаты поиска",entries.filter(r=>normalize(display(r)+"\n"+r.body).includes(q)));return}
+ for(const [g,label] of groups){
+  const box=el("details");box.className="workspace";box.dataset.group=g;box.open=ui.open[g];
+  const h=el("summary");h.className="workspace-head";h.append(el("span",label));box.append(h);
+  box.ontoggle=()=>{if(ui.open[g]!==box.open){ui.open[g]=box.open;saveUI()}};
+  const body=el("div");body.className="workspace-body";
+  for(const [l,caption] of lanes)panel(body,caption,entries.filter(r=>r.p.group===g&&r.p.lane===l));
+  box.append(body);content.append(box)
+ }
+ const unknown=entries.filter(r=>!groups.some(([g])=>g===r.p.group)||!lanes.some(([l])=>l===r.p.lane));
+ if(unknown.length)panel(content,"Без раздела",unknown)
+}
+function preview(r){const v=by("drive-preview");v.replaceChildren();for(const line of r.body.split(/\r?\n/)){
+ if(!line.trim())continue;const m=line.match(/^(#{1,5})\s+(.*)$/), item=line.match(/^\s*[-*]\s+(?:\[([ xX])\]\s+)?(.*)$/);
+ const x=el(m?"h"+Math.min(6,m[1].length+1):"p");if(item?.[1])x.append(document.createTextNode(item[1].toLowerCase()==="x"?"☑ ":"☐ "));
+ inline(x,m?.[2]??item?.[2]??line,r.meta.id);v.append(x);
+}}
+function openNote(){
+ const hash=location.hash.match(/^#note\/([A-Za-z0-9_-]{8,150})(?:\/.*)?$/);
+ const r=hash?rows.get(hash[1]):null;if(!r){clearDetails();state();return}
+ if(active===r.meta.id&&editing)return;
+ cacheDraft();active=r.meta.id;editing=false;by("drive-editor").value="";by("drive-title").textContent=display(r);preview(r);
+ by("drive-preview").hidden=false;by("drive-editor").hidden=true;by("drive-save").hidden=true;by("drive-cancel").hidden=true;
+ by("drive-edit").textContent=drafts.has(active)?"Открыть несохранённый черновик":"Редактировать Markdown";by("drive-edit").hidden=r.meta.capabilities?.canEdit!==true;by("drive-detail").hidden=false;
+ by("drive-detail").scrollIntoView({block:"start"});state();
+}
+window.addEventListener("hashchange",openNote);window.addEventListener("beforeunload",e=>{cacheDraft();if(drafts.size){e.preventDefault();e.returnValue=""}});by("search").oninput=draw;
+
+async function prepare(){
+ if(ready)return;if(sdkTask)return sdkTask;
+ sdkTask=(async()=>{
+ const sdk=url=>new Promise((yes,no)=>{let s=el("script");s.src=url;s.onload=yes;s.onerror=no;document.head.append(s)});
+ const timeout=new Promise((_,no)=>setTimeout(()=>no(new Error("Google SDK timeout")),12000));
+ await Promise.race([Promise.all([sdk("https://accounts.google.com/gsi/client"),sdk("https://apis.google.com/js/api.js")]),timeout]);
+ await new Promise((yes,no)=>gapi.load("picker",{callback:yes,onerror:no,ontimeout:no,timeout:10000}));ready=true;
+ })();try{await sdkTask}finally{sdkTask=null}
+}
+const makeFolder=f=>driveFolder({folderId:f,getToken:()=>connected()?token:null});
+async function setFolder(id,reset){
+ if(!validId(id))return;const mine=++epoch,next=makeFolder(id), info=await next.verifyFolder();
+ if(mine!==epoch||!connected())return;
+ if(reset||scopeFolder!==id){clearDetails();rows.clear();drafts.clear()}
+ scopeFolder=id;adapter=next;canCreate=info.capabilities?.canAddChildren===true;keepFolder(id);await refresh();
+}
+async function refresh(){
+ const mine=++epoch,chosen=adapter;if(!chosen||!connected())return;
+ cacheDraft();message("Загружаю подключённые заметки…");
+ const {rows:listed,partial}=await chosen.listNotes(), fresh=new Map();
+ let cursor=0,failed=0;const capped=listed.slice(0,80);const workers=Array.from({length:Math.min(4,capped.length)},async()=>{
+  while(cursor<capped.length && mine===epoch && connected()){
+   const meta=capped[cursor++];try{const snapshot=await chosen.file(meta.id).read();const {p,body}=parse(snapshot.markdown);if(mine===epoch&&connected())fresh.set(meta.id,{meta,snapshot,p,body});}catch{failed++}
+  }
+ });await Promise.all(workers);
+ if(mine!==epoch||!connected())return;
+ rows.clear();for(const [id,r] of fresh)rows.set(id,r);
+ draw();openNote();
+ message((rows.size?"Подключено заметок: "+rows.size+". ":"Подключённых заметок пока нет. ")+(partial||failed||listed.length>capped.length?"Список может быть неполным. ":"")+"На Диске могут быть и другие файлы. Чтобы подключить нужные .md, нажмите «Добавить заметки».");
+}
+async function run(fn){if(busy)return;busy=true;state();try{await fn()}catch{if(!connected())expire();else message("Не удалось завершить действие с Google Диском. Проверьте разрешения и повторите. Несохранённые правки остаются в этой вкладке.")}finally{busy=false;state()}}
+by("drive-connect").onclick=()=>{
+ if(connected()||busy)return;
+ const auth=()=>window.google.accounts.oauth2.initTokenClient({client_id:config.clientId,scope,include_granted_scopes:false,callback:res=>{
+  busy=false;if(!res?.access_token||res.error){message("Google не подключён. Попробуйте ещё раз.");state();return}
+  token=res.access_token;const ttl=Math.max(1,Number(res.expires_in)||1)*1000;expires=Date.now()+ttl;clearTimeout(expiryTimer);expiryTimer=setTimeout(expire,ttl+50);state();
+  if(scopeFolder){run(async()=>{try{await setFolder(scopeFolder,false)}catch{adapter=null;message("Не удалось открыть сохранённую папку. Нажмите «Выбрать рабочую папку».")}})}
+  else message("Выберите рабочую папку Google Диска.");
+ },error_callback:()=>{busy=false;message("Окно подключения закрыто. Можно попробовать снова.");state()}}).requestAccessToken();
+ if(ready){busy=true;state();try{auth()}catch{busy=false;state();message("Не удалось открыть Google. Попробуйте ещё раз.")}}
+ else run(async()=>{await prepare();message("Google готов. Нажмите «Подключить» ещё раз, чтобы открыть окно входа.")});
+};
+by("drive-pick").onclick=()=>{
+ if(!connected()||picker||busy)return;
+ const chosen=adapter, expected=scopeFolder;picker=true;state();
+ try{
+ const view=chosen?new google.picker.DocsView(google.picker.ViewId.DOCS).setIncludeFolders(false).setSelectFolderEnabled(false).setParent(expected)
+ :new google.picker.DocsView(google.picker.ViewId.FOLDERS).setIncludeFolders(true).setSelectFolderEnabled(true);
+ const builder=new google.picker.PickerBuilder().addView(view).setAppId(config.appId).setDeveloperKey(config.pickerKey).setOAuthToken(token).setOrigin(location.origin);
+ if(chosen)builder.enableFeature(google.picker.Feature.MULTISELECT_ENABLED);
+ builder.setCallback(event=>{
+  if(event.action===google.picker.Action.CANCEL){picker=false;state();return}
+  if(event.action!==google.picker.Action.PICKED)return;
+  picker=false;state();if(!connected())return;
+  const found=(event.docs||[]).filter(d=>validId(d.id));
+  if(!chosen){if(found[0])run(()=>setFolder(found[0].id,true));return}
+  if(adapter===chosen&&scopeFolder===expected&&found.length)run(refresh);
+ }).build().setVisible(true);
+ }catch{picker=false;state();message("Не удалось открыть выбор файлов. Попробуйте ещё раз.")}
+};
+by("drive-refresh").onclick=()=>run(refresh);
+by("drive-forget").onclick=()=>{
+ cacheDraft();if(drafts.size&&!window.confirm("Есть несохранённые черновики. Сменить папку и закрыть их?"))return;
+ epoch++;adapter=null;scopeFolder="";canCreate=false;clearDetails();rows.clear();drafts.clear();keepFolder("");location.hash="#/current";draw();state();
+ message(connected()?"Выберите другую рабочую папку.":"Подключите Google Диск.");
+};
+by("drive-edit").onclick=()=>{
+ const r=rows.get(active);if(!r||!connected()||r.meta.capabilities?.canEdit!==true)return;editing=true;const t=by("drive-editor");
+ t.value=drafts.get(active)?.markdown??r.snapshot.markdown;t.hidden=false;by("drive-preview").hidden=true;by("drive-edit").hidden=true;by("drive-save").hidden=false;by("drive-cancel").hidden=false;t.focus();state();
+};
+by("drive-cancel").onclick=()=>{drafts.delete(active);editing=false;openNote()};
+by("drive-save").onclick=()=>run(async()=>{
+ const r=rows.get(active),chosen=adapter,mine=epoch;if(!r||!editing||!chosen)return;
+ const markdown=by("drive-editor").value,id=r.meta.id,version=drafts.get(id)?.version??r.snapshot.version;
+ drafts.set(id,{markdown,version});await chosen.file(id).save({markdown,version});
+ if(mine!==epoch||!connected())return;drafts.delete(id);if(active===id)editing=false;await refresh();
+});
+by("drive-create").onsubmit=e=>{e.preventDefault();const chosen=adapter;if(!chosen||!canCreate)return;const f=new FormData(e.target);run(async()=>{
+ await chosen.create(f.get("title"),f.get("group"),f.get("lane"));e.target.reset();await refresh();
+})};
+const strip=s=>s.replace(/\.md$/i,"");
+const normalize=s=>s.normalize("NFC").trim().toLocaleLowerCase("ru");
+const yamlText=s=>{
+ const t=s.trim();
+ if(t.startsWith('"')&&t.endsWith('"')){try{const x=JSON.parse(t);if(typeof x==="string")return x}catch{}}
+ return t.replace(/^(['"])(.*)\1$/,"$2");
+};
+const parse=raw=>{
+ const match=raw.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+ const p={};let last="";
+ for(const line of (match?.[1]||"").split(/\r?\n/)){
+  const scalar=line.match(/^([A-Za-z_]+):(?:\s+(.*))?$/);
+  if(scalar){last=scalar[1];p[last]=yamlText(scalar[2]||"");continue}
+  const item=line.match(/^\s+-\s+(.+)$/);
+  if(item&&last){if(!Array.isArray(p[last]))p[last]=[];p[last].push(item[1].replace(/^(['"])(.*)\1$/,"$2"))}
+ }
+ return {p,body:raw.slice(match?.[0].length||0)};
+};
+function safeUrl(url){try{const u=new URL(url);return ["http:","https:","mailto:"].includes(u.protocol)?u.href:null}catch{return null}}
+function inline(parent,line,current){
+ const pattern=/!?\[\[([^\]\n]+)\]\]|\[([^\]\n]+)\]\(([^)\s]+)\)|\*\*([^*\n]+)\*\*|`([^`\n]+)`/g;
+ let i=0;
+ for(const m of line.matchAll(pattern)){
+  parent.append(document.createTextNode(line.slice(i,m.index)));i=m.index+m[0].length;
+  if(m[1]){const [target,label]=m[1].split("|"),[name,heading]=target.split("#"),n=name?resolve(name,current):current;if(n){const a=el("a",label||heading||name);a.href=route(n);parent.append(a)}else{const e=el("span",label||target);e.className="muted";e.title="Связанная заметка не найдена или имя неоднозначно";parent.append(e)}}
+  else if(m[2]){const href=safeUrl(m[3]);let n=null;if(!href){try{n=resolve(decodeURIComponent(m[3]),current)}catch{}}const a=el(href||n?"a":"span",m[2]);if(href){a.href=href;a.target="_blank";a.rel="noopener noreferrer"}else if(n)a.href=route(n);parent.append(a)}
+  else parent.append(el(m[4]?"strong":"code",m[4]||m[5]));
+ }
+ parent.append(document.createTextNode(line.slice(i)));
+}
+const uiKey="planx:appearance:v2";
+const looks={a:["КАРТОТЕКА / А","Два поля"],b:["КАРТОТЕКА / Б","Карманные папки"],c:["КАРТОТЕКА / В","Рабочий круг"]};
+const groups=[["personal","Личное"],["work","Петроработа"]];
+const lanes=[["current","Текущие"],["later","Долгосрочные"]];
+const ui={theme:"b",open:{personal:true,work:true},lane:{personal:"current",work:"current"}};
+let uiRestored=false;
+try{
+ const remembered=JSON.parse(localStorage.getItem(uiKey)||"null");
+ if(remembered&&typeof remembered==="object"){
+  if(Object.hasOwn(looks,remembered.theme))ui.theme=remembered.theme;
+  for(const [g] of groups){
+   if(typeof remembered.open?.[g]==="boolean")ui.open[g]=remembered.open[g];
+   if(lanes.some(([l])=>l===remembered.lane?.[g]))ui.lane[g]=remembered.lane[g];
+  }
+  uiRestored=true;
+ }
+}catch{}
+if(!uiRestored&&location.hash==="#/later"){ui.lane.personal="later";ui.lane.work="later"}
+function saveUI(){try{localStorage.setItem(uiKey,JSON.stringify(ui))}catch{}}
+function setTheme(theme,remember=false){
+ if(!Object.hasOwn(looks,theme))return;
+ ui.theme=theme;document.documentElement.dataset.theme=theme;
+ $("#theme-kicker").textContent=looks[theme][0];$("#theme-title").textContent=looks[theme][1];
+ for(const b of document.querySelectorAll("[data-theme] button[data-theme]"))b.setAttribute("aria-pressed",String(b.dataset.theme===theme));
+ if(remember)saveUI();
+}
+document.querySelector(".theme-pick").addEventListener("click",e=>{
+ const b=e.target.closest("button[data-theme]");if(!b)return;
+ setTheme(b.dataset.theme,true);
+ const menu=$(".theme-menu");menu.open=false;menu.querySelector("summary").focus();
+});
+document.addEventListener("click",e=>{const menu=$(".theme-menu");if(menu.open&&!menu.contains(e.target))menu.open=false});
+document.addEventListener("keydown",e=>{const menu=$(".theme-menu");if(e.key==="Escape"&&menu.open){menu.open=false;menu.querySelector("summary").focus()}});
+setTheme(ui.theme);
+
+if(location.origin!==config.origin){message("Этот адрес не настроен для Google Диска.")}else{draw();state();prepare().catch(()=>message("Google недоступен. Можно повторить подключение."))}
 </script>
 </body>
 </html>
