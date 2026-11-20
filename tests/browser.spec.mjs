@@ -49,10 +49,16 @@ test("opens a nested tree, reads Markdown and restores the chosen folder after r
   }
 
   await explorer.click();
-  const folder = page.locator("#tree summary:visible");
-  await folder.filter({ hasText: /^Петроработа$/ }).click();
-  await folder.filter({ hasText: /^Текущие$/ }).click();
-  await folder.filter({ hasText: /^Маяк$/ }).click();
+  const openFolder = async (parent, name) => {
+    const summary = parent.locator(":scope > ul > li > details > summary").filter({ hasText: name });
+    await summary.click();
+    const folder = summary.locator("..");
+    await expect(folder).toHaveJSProperty("open", true);
+    return folder;
+  };
+  const work = await openFolder(page.locator("#tree"), /^Петроработа$/);
+  const current = await openFolder(work, /^Текущие$/);
+  await openFolder(current, /^Маяк$/);
   await expect(page.getByRole("link", { name: "Сверить план маяка" })).toBeVisible();
   await page.getByRole("searchbox").fill("Сверить");
   await expect(page.locator("#tree a")).toHaveCount(1);
