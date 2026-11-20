@@ -397,6 +397,13 @@ function matchVersions(view, snapshot) {
   }
 }
 
+function showNote(file, snapshot) {
+  const parsed = applyNote(file, snapshot);
+  const title = displayName(file, parsed);
+  by("note-title").textContent = title;
+  renderMarkdown(by("note-preview"), { ...parsed, title, file, files, notes });
+}
+
 async function loadNote(view, heading = "") {
   const file = files.find((entry) => entry.id === view.id && entry.type === "note");
   if (!file) {
@@ -409,12 +416,12 @@ async function loadNote(view, heading = "") {
   try {
     const snapshot = await view.connection.read(view.folder, view.id);
     if (active !== view) return;
+    const saved = view.saved;
+    if (saved && snapshot.version === saved.version) throw new ConnectionError("conflict");
     view.snapshot = snapshot;
-    const parsed = applyNote(file, snapshot);
-    const title = displayName(file, parsed);
-    by("note-title").textContent = title;
-    renderMarkdown(by("note-preview"), { ...parsed, title, file, files, notes });
-    noteStatus("");
+    view.saved = null;
+    showNote(file, snapshot);
+    noteStatus(saved ? "Сохранено." : "");
     if (view.draft) {
       matchVersions(view, snapshot);
       if (!view.draft && view.editing) by("editor").value = snapshot.markdown;
@@ -428,7 +435,8 @@ async function loadNote(view, heading = "") {
   } catch (error) {
     if (active !== view) return;
     view.needsReview ||= !!view.draft;
-    noteStatus(userError(error) + (view.draft ? " Черновик сохранён в этой вкладке." : ""));
+    noteStatus(view.saved ? "Сохранено. Откройте заметку снова, чтобы обновить версию для редактирования."
+      : userError(error) + (view.draft ? " Черновик сохранён в этой вкладке." : ""));
     noteControls(view);
   }
 }
@@ -543,8 +551,13 @@ by("save").onclick = async () => {
       const shown = active;
       shown.draft = null;
       shown.editing = false;
+      shown.snapshot = null;
+      shown.saved = draft;
+      const file = files.find((entry) => entry.id === shown.id && entry.type === "note");
+      if (file) showNote(file, draft);
+      noteControls(shown);
+      noteStatus("Сохранено.");
       await loadNote(shown);
-      if (active === shown) noteStatus("Сохранено.");
     }
     if (connection === view.connection) void sync({ quiet: true });
   } catch (error) {

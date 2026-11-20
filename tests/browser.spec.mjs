@@ -82,6 +82,8 @@ test("edits same file, retains a draft offline or at 401, and handles a competin
   let version = 1;
   let expired = false;
   let interruptAfterWrite = false;
+  let holdPreviousSnapshot = false;
+  let previousSnapshot;
   let puts = 0;
   const routePath = "/v1/folders/" + folder + "/notes/" + id;
   await page.route(origin + "/v1/**", async (route) => {
@@ -109,11 +111,13 @@ test("edits same file, retains a draft offline or at 401, and handles a competin
       puts++;
       const input = request.postDataJSON();
       if (input.version !== String(version)) return respond({ error: "conflict" }, 409);
+      previousSnapshot = { markdown, version: String(version), editable: true };
       markdown = input.markdown;
       version++;
       if (interruptAfterWrite) return route.abort("failed");
       return respond({ saved: true });
     }
+    if (holdPreviousSnapshot && previousSnapshot) return respond(previousSnapshot);
     return respond({ markdown, version: String(version), editable: true });
   });
 
@@ -164,4 +168,20 @@ test("edits same file, retains a draft offline or at 401, and handles a competin
   expect(puts).toBe(2);
   await page.reload();
   await expect(page.locator("#note-preview")).toContainText("Моя правка");
+
+  await page.getByRole("button", { name: "Редактировать" }).click();
+  const acknowledged = merged + "\n\nПоследняя сохранённая правка";
+  await editor.fill(acknowledged);
+  interruptAfterWrite = false;
+  holdPreviousSnapshot = true;
+  await save.click();
+  await expect(page.locator("#note-status")).toContainText("Сохранено.");
+  await expect(page.locator("#note-preview")).toContainText("Последняя сохранённая правка");
+  await expect(page.getByRole("button", { name: "Редактировать" })).toBeHidden();
+  expect(markdown).toBe(acknowledged);
+
+  holdPreviousSnapshot = false;
+  await page.reload();
+  await expect(page.locator("#note-preview")).toContainText("Последняя сохранённая правка");
+  await expect(page.getByRole("button", { name: "Редактировать" })).toBeVisible();
 });
