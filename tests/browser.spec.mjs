@@ -19,7 +19,8 @@ test("opens a nested tree, reads Markdown and restores the chosen folder after r
   await page.getByRole("link", { name: "Plan X, главная" }).click();
   await expect(page.locator("#digest a")).toHaveCount(1);
   await expect(page.locator("#digest")).toContainText("2025-01-03");
-  await page.getByText("Личное", { exact: true }).click();
+  await page.locator("#workspaces").getByText("Личное", { exact: true }).click();
+  await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("planx:appearance:v2")).open.personal)).toBe(false);
   await page.reload();
   await expect(page.locator(".workspace").first()).not.toHaveAttribute("open", "");
   await expect(page.locator("#digest a")).toHaveCount(1);
@@ -48,9 +49,10 @@ test("opens a nested tree, reads Markdown and restores the chosen folder after r
   }
 
   await explorer.click();
-  await page.getByText("Петроработа", { exact: true }).click();
-  await page.getByText("Текущие", { exact: true }).click();
-  await page.getByText("Маяк", { exact: true }).click();
+  const folder = page.locator("#tree summary:visible");
+  await folder.filter({ hasText: /^Петроработа$/ }).click();
+  await folder.filter({ hasText: /^Текущие$/ }).click();
+  await folder.filter({ hasText: /^Маяк$/ }).click();
   await expect(page.getByRole("link", { name: "Сверить план маяка" })).toBeVisible();
   await page.getByRole("searchbox").fill("Сверить");
   await expect(page.locator("#tree a")).toHaveCount(1);
