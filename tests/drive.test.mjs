@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { driveVault } from "../connector/drive.mjs";
 import { createHandler } from "../connector/server.mjs";
 import { EventEmitter } from "node:events";
@@ -11,7 +12,7 @@ const doc = "fixture_note";
 const folder = (id, name, parent) => ({
   id, name, parents: [parent], mimeType: "application/vnd.google-apps.folder", trashed: false, version: "1",
 });
-function fakeDrive({ atomicWrites = true } = {}) {
+function fakeDrive({ atomicWrites = true, staleMedia = false, hasChecksum = true } = {}) {
   let version = 1;
   let text = "# Fictional";
   const requests = [];
@@ -25,7 +26,8 @@ function fakeDrive({ atomicWrites = true } = {}) {
   ];
   function data() {
     return [...files, { id: doc, name: "Fixture.md", mimeType: "text/markdown", parents: ["nested_two"],
-      trashed: false, version: String(version), capabilities: { canModifyContent: true } }];
+      trashed: false, version: String(version), capabilities: { canModifyContent: true },
+      md5Checksum: hasChecksum ? createHash("md5").update(text).digest("hex") : undefined }];
   }
   const etag = () => '"fixture-' + version + '"';
   const vault = driveVault({ rootId, atomicWrites, getToken: async () => "mock", request: async (url, options) => {
@@ -45,7 +47,7 @@ function fakeDrive({ atomicWrites = true } = {}) {
       version++;
       return Response.json({ id });
     }
-    if (url.searchParams.get("alt") === "media") return new Response(text);
+    if (url.searchParams.get("alt") === "media") return new Response(staleMedia ? "# Predecessor" : text);
     if (url.pathname.includes("/v2/")) return Response.json({ id, version: item.version, etag: etag() });
     return Response.json(item);
   } });
@@ -91,6 +93,17 @@ test("writes are unavailable until provider behavior has been checked", async ()
   assert.equal(snapshot.editable, false);
   await assert.rejects(vault.save(doc, snapshot), { code: "read_only" });
   assert.equal(requests.some(({ options }) => options.method === "PUT"), false);
+});
+
+test("rejects stale media and never edits against an unverified snapshot", async () => {
+  const stale = fakeDrive({ staleMedia: true });
+  await assert.rejects(stale.vault.read(doc), { code: "conflict" });
+  const unverified = fakeDrive({ hasChecksum: false });
+  const snapshot = await unverified.vault.read(doc);
+  assert.equal(snapshot.markdown, "# Fictional");
+  assert.equal(snapshot.editable, false);
+  await assert.rejects(unverified.vault.save(doc, snapshot), { code: "read_only" });
+  assert.equal(unverified.requests.some(({ options }) => options.method === "PUT"), false);
 });
 
 test("HTTP handler restricts origin and folder, and expires its session", async () => {

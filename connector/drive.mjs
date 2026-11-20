@@ -1,9 +1,9 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 const v3 = "https://www.googleapis.com/drive/v3/files";
 const v2 = "https://www.googleapis.com/drive/v2/files";
 const upload = "https://www.googleapis.com/upload/drive/v2/files";
-const fields = "id,name,mimeType,parents,trashed,version,modifiedTime,capabilities(canModifyContent)";
+const fields = "id,name,mimeType,parents,trashed,version,md5Checksum,capabilities(canModifyContent)";
 const listFields = "id,name,mimeType,parents,trashed,version,modifiedTime";
 const folderMime = "application/vnd.google-apps.folder";
 const noteMimes = new Set(["text/markdown", "text/plain", "application/octet-stream", "text/x-markdown"]);
@@ -150,8 +150,12 @@ export function driveVault({ rootId, getToken, request = fetch, atomicWrites = f
     const tag = atomicWrites ? await validator(before) : null;
     const markdown = await readText(await call(v3, id, { alt: "media" }));
     const after = await noteInFolder(id);
-    if (before.version !== after.version) throw new DriveError("conflict", 409);
-    const editable = !!tag && after.capabilities?.canModifyContent === true;
+    const checksum = after.md5Checksum;
+    if (before.version !== after.version ||
+        (checksum && checksum !== createHash("md5").update(markdown).digest("hex"))) {
+      throw new DriveError("conflict", 409);
+    }
+    const editable = !!tag && !!checksum && after.capabilities?.canModifyContent === true;
     return { markdown, version: tag || after.version, editable };
   }
 
@@ -179,7 +183,7 @@ export function driveVault({ rootId, getToken, request = fetch, atomicWrites = f
   async function save(id, { markdown, version }) {
     if (!atomicWrites || !strongEtag(version)) throw new DriveError("read_only", 403);
     const current = await noteInFolder(id);
-    if (current.capabilities?.canModifyContent !== true) throw new DriveError("read_only", 403);
+    if (!current.md5Checksum || current.capabilities?.canModifyContent !== true) throw new DriveError("read_only", 403);
     if (await validator(current) !== version) throw new DriveError("conflict", 409);
     await replaceIfMatch(id, markdown, version, current.mimeType);
   }
