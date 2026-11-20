@@ -32,7 +32,7 @@ test("opens a nested tree, reads Markdown and restores the chosen folder after r
   await expect(home).toHaveAttribute("aria-current", "page");
 
   for (const [theme, label] of [["a", "Два поля"], ["c", "Рабочий круг"], ["b", "Карманные папки"]]) {
-    await page.getByText("Тема", { exact: true }).click();
+    await page.locator(".theme-menu > summary").click();
     await page.getByRole("button", { name: label }).click();
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
     const dimensions = await page.evaluate(() => ({
