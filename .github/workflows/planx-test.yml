@@ -1,0 +1,19 @@
+name: Plan X tests
+on:
+  push:
+    branches: [planx-folder-drive]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm test
+      - run: npx playwright install --with-deps webkit
+      - run: npm run test:browser
